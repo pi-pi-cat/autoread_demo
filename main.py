@@ -4,15 +4,14 @@ import random
 import argparse
 from tabulate import tabulate
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from dotenv import load_dotenv
 import sys
 
-# 加载 .env 文件中的环境变量
-load_dotenv()
+# 删除这行，因为我们不再使用 .env 文件
+# load_dotenv()
 
-
-USERNAME = os.environ.get("LINUXDO_USERNAME")
-PASSWORD = os.environ.get("LINUXDO_PASSWORD")
+# 修改这些行以使用 GitHub Secrets
+USERNAME = os.environ.get("USERNAME")
+PASSWORD = os.environ.get("PASSWORD")
 HOME_URL = os.environ.get("HOME_URL", "https://linux.do/")
 HEADLESS = os.environ.get("HEADLESS", "True").lower() == "true"
 WAIT_TIME = float(os.environ.get("WAIT_TIME", 2))
@@ -272,7 +271,7 @@ if __name__ == "__main__":
 
     if not USERNAME or not PASSWORD:
         print(
-            "请在 .env 文件中设置 LINUXDO_USERNAME 和 LINUXDO_PASSWORD", file=sys.stderr
+            "请在 GitHub Secrets 中设置 USERNAME 和 PASSWORD", file=sys.stderr
         )
         sys.stderr.flush()
         exit(1)
