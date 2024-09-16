@@ -4,12 +4,13 @@ import random
 import argparse
 from tabulate import tabulate
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-import sys
+from dotenv import load_dotenv
 
-# 删除这行，因为我们不再使用 .env 文件
-# load_dotenv()
 
-# 修改这些行以使用 GitHub Secrets
+# 加载 .env 文件中的环境变量
+load_dotenv()
+
+
 USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
 HOME_URL = os.environ.get("HOME_URL", "https://linux.do/")
@@ -24,39 +25,16 @@ CONNECT_INFO_URL = os.environ.get("CONNECT_INFO_URL", "https://connect.linux.do/
 
 class LinuxDoBrowser:
     def __init__(self, headless=HEADLESS, wait_time=WAIT_TIME) -> None:
-        print("Initializing LinuxDoBrowser...", file=sys.stderr)
-        sys.stderr.flush()
         try:
-            print("Starting Playwright...", file=sys.stderr)
-            sys.stderr.flush()
             self.pw = sync_playwright().start()
-
-            print(f"Launching browser (headless={headless})...", file=sys.stderr)
-            sys.stderr.flush()
             self.browser = self.pw.chromium.launch(headless=headless)
-
-            print("Creating new context...", file=sys.stderr)
-            sys.stderr.flush()
             self.context = self.browser.new_context()
-
-            print("Creating new page...", file=sys.stderr)
-            sys.stderr.flush()
             self.page = self.context.new_page()
-
             self.wait_time = wait_time
-            print("正在打开主页...", file=sys.stderr)
-            sys.stderr.flush()
+            print("正在打开主页...")
             self.page.goto(HOME_URL)
-
-            print("Loading visited topics...", file=sys.stderr)
-            sys.stderr.flush()
-            self.visited_topics = self.load_visited_topics()
-
-            print("Initialization complete.", file=sys.stderr)
-            sys.stderr.flush()
         except Exception as e:
-            print(f"初始化失败: {e}", file=sys.stderr)
-            sys.stderr.flush()
+            print(f"初始化失败: {e}")
             raise
 
     def login(self):
@@ -92,7 +70,7 @@ class LinuxDoBrowser:
             topics = self.page.query_selector_all("#list-area .title")
 
             # 用于记录已访问的主题
-            visited_topics = self.visited_topics
+            visited_topics = set()
 
             for i, topic in enumerate(topics, 1):
                 try:
@@ -259,9 +237,6 @@ class LinuxDoBrowser:
 
 
 if __name__ == "__main__":
-    print("Main block entered", file=sys.stderr)
-    sys.stderr.flush()
-
     parser = argparse.ArgumentParser(description="LinuxDo Browser Automation")
     parser.add_argument("--visible", action="store_true", help="Run in visible mode")
     parser.add_argument(
@@ -270,26 +245,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not USERNAME or not PASSWORD:
-        print(
-            "请在 GitHub Secrets 中设置 USERNAME 和 PASSWORD", file=sys.stderr
-        )
-        sys.stderr.flush()
+        print("请在 .env 文件中设置 LINUXDO_USERNAME 和 LINUXDO_PASSWORD")
         exit(1)
 
-    print(f"USERNAME: {USERNAME}", file=sys.stderr)
-    print(f"PASSWORD: {'*' * len(PASSWORD)}", file=sys.stderr)
-    print(f"HOME_URL: {HOME_URL}", file=sys.stderr)
-    print(f"HEADLESS: {HEADLESS}", file=sys.stderr)
-    print(f"WAIT_TIME: {WAIT_TIME}", file=sys.stderr)
-    sys.stderr.flush()
-
     try:
-        print("Creating LinuxDoBrowser instance...", file=sys.stderr)
-        sys.stderr.flush()
         l = LinuxDoBrowser(headless=not args.visible, wait_time=args.wait_time)
-        print("Running LinuxDoBrowser...", file=sys.stderr)
-        sys.stderr.flush()
         l.run()
     except Exception as e:
-        print(f"程序运行失败: {e}", file=sys.stderr)
-        sys.stderr.flush()
+        print(f"程序运行失败: {e}")
