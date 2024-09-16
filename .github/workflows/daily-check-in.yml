@@ -21,9 +21,28 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium
 
+      - name: Debug info
+        run: |
+          echo "Python version:"
+          python --version
+          echo "Pip version:"
+          pip --version
+          echo "Installed packages:"
+          pip list
+
       - name: Execute script
         env:
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
         run: |
-          python main.py
+          python -u main.py
+        
+      - name: Check for errors
+        if: failure()
+        run: |
+          echo "Script execution failed. Checking for error logs..."
+          if [ -f error.log ]; then
+            cat error.log
+          else
+            echo "No error log found."
+          fi

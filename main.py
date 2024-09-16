@@ -4,6 +4,7 @@ import random
 import argparse
 from tabulate import tabulate
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+import sys
 
 USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
@@ -12,58 +13,63 @@ PASSWORD = os.environ.get("PASSWORD")
 HOME_URL = "https://linux.do/"
 
 
+def print_log(*args, **kwargs):
+    print(*args, **kwargs, file=sys.stderr)
+    sys.stderr.flush()
+
+
 class LinuxDoBrowser:
     def __init__(self, headless=True, wait_time=2) -> None:
         try:
-            print("正在初始化浏览器...")
+            print_log("正在初始化浏览器...")
             self.pw = sync_playwright().start()
             self.browser = self.pw.chromium.launch(headless=headless)
             self.context = self.browser.new_context()
             self.page = self.context.new_page()
             self.wait_time = wait_time
-            print("正在打开主页...")
+            print_log("正在打开主页...")
             self.page.goto(HOME_URL)
-            print(f"浏览器初始化完成，headless模式：{'是' if headless else '否'}")
+            print_log(f"浏览器初始化完成，headless模式：{'是' if headless else '否'}")
         except Exception as e:
-            print(f"初始化失败: {e}")
+            print_log(f"初始化失败: {e}")
             raise
 
     def login(self):
         try:
-            print("正在登录...")
+            print_log("正在登录...")
             self.page.click(".login-button .d-button-label")
             self.page.fill("#login-account-name", USERNAME)
             self.page.fill("#login-account-password", PASSWORD)
             self.page.click("#login-button")
             self.page.wait_for_selector("#current-user", timeout=10000)
             if self.page.query_selector("#current-user"):
-                print("登录成功")
+                print_log("登录成功")
                 return True
             else:
-                print("登录失败")
+                print_log("登录失败")
                 return False
         except PlaywrightTimeoutError:
-            print("登录超时")
+            print_log("登录超时")
             return False
         except Exception as e:
-            print(f"登录过程中发生错误: {e}")
+            print_log(f"登录过程中发生错误: {e}")
             return False
 
     def click_topic(self):
-        print("正在浏览主题...")
+        print_log("正在浏览主题...")
         try:
-            print("开始向下滚动主页...")
+            print_log("开始向下滚动主页...")
             for _ in range(10):
                 self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 time.sleep(random.uniform(1, 5))  # 在底部稍作停留
 
             topics = self.page.query_selector_all("#list-area .title")
 
-            print(f"找到 {len(topics)} 个主题")
+            print_log(f"找到 {len(topics)} 个主题")
 
             # 用于记录已访问的主题
             visited_topics = self.load_visited_topics()
-            print(f"加载已访问主题数：{len(visited_topics)}")
+            print_log(f"加载已访问主题数：{len(visited_topics)}")
 
             for i, topic in enumerate(topics, 1):
                 try:
@@ -71,10 +77,10 @@ class LinuxDoBrowser:
 
                     # 如果主题已经访问过，跳过
                     if topic_url in visited_topics:
-                        print(f"跳过已访问的主题 {i}/{len(topics)}")
+                        print_log(f"跳过已访问的主题 {i}/{len(topics)}")
                         continue
 
-                    print(f"正在打开主题：{topic_url}")
+                    print_log(f"正在打开主题：{topic_url}")
                     page = self.context.new_page()
                     page.goto(topic_url)
 
@@ -127,20 +133,22 @@ class LinuxDoBrowser:
                                             )
                                             if like_button:
                                                 like_button.click()
-                                                print(f"点赞成功，点赞数：{like_count}")
+                                                print_log(
+                                                    f"点赞成功，点赞数：{like_count}"
+                                                )
                                                 time.sleep(random.uniform(2.5, 5.5))
 
                                     # 将元素添加到已处理集合中
                                     processed_elements.add(element_id)
 
                                 except Exception as e:
-                                    print(f"处理点赞按钮时发生错误: {e}")
+                                    print_log(f"处理点赞按钮时发生错误: {e}")
 
                             # 随机等待一小段时间，模拟人类阅读行为
                             time.sleep(random.uniform(1, 10))
 
                         except Exception as e:
-                            print(f"滚动过程中发生错误: {e}")
+                            print_log(f"滚动过程中发生错误: {e}")
 
                     # 确保滚动到底部
                     page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
@@ -149,20 +157,20 @@ class LinuxDoBrowser:
                     page.close()
 
                 except Exception as e:
-                    print(f"处理主题 {i} 时发生错误: {e}")
+                    print_log(f"处理主题 {i} 时发生错误: {e}")
                 finally:
                     try:
                         page.close()
-                        print(f"关闭主题页面")
+                        print_log(f"关闭主题页面")
                     except:
                         pass
 
-            print(f"所有主题浏览完成，共访问 {len(visited_topics)} 个主题")
+            print_log(f"所有主题浏览完成，共访问 {len(visited_topics)} 个主题")
             self.save_visited_topics(visited_topics)
-            print("已保存访问记录")
+            print_log("已保存访问记录")
 
         except Exception as e:
-            print(f"浏览主题过程中发生错误: {e}")
+            print_log(f"浏览主题过程中发生错误: {e}")
 
     def save_visited_topics(self, visited_topics):
         with open("visited_topics.txt", "w") as f:
@@ -179,30 +187,30 @@ class LinuxDoBrowser:
 
     def run(self):
         try:
-            print("开始运行自动化任务...")
+            print_log("开始运行自动化任务...")
             if not self.login():
-                print("登录失败，退出程序")
+                print_log("登录失败，退出程序")
                 return
             self.click_topic()
             self.print_connect_info()
-            print("自动化任务完成")
+            print_log("自动化任务完成")
         except Exception as e:
-            print(f"运行过程中发生错误: {e}")
+            print_log(f"运行过程中发生错误: {e}")
         finally:
             try:
-                print("正在关闭浏览器...")
+                print_log("正在关闭浏览器...")
                 self.browser.close()
                 self.pw.stop()
-                print("浏览器已关闭")
+                print_log("浏览器已关闭")
             except:
-                print("关闭浏览器时发生错误")
+                print_log("关闭浏览器时发生错误")
 
     def click_like(self, page):
         page.locator(".discourse-reactions-reaction-button").first.click()
-        print("Like success")
+        print_log("Like success")
 
     def print_connect_info(self):
-        print("正在获取连接信息...")
+        print_log("正在获取连接信息...")
         page = self.context.new_page()
         page.goto("https://connect.linux.do/")
         rows = page.query_selector_all("table tr")
@@ -217,8 +225,8 @@ class LinuxDoBrowser:
                 requirement = cells[2].text_content().strip()
                 info.append([project, current, requirement])
 
-        print("--------------Connect Info-----------------")
-        print(tabulate(info, headers=["项目", "当前", "要求"], tablefmt="pretty"))
+        print_log("--------------Connect Info-----------------")
+        print_log(tabulate(info, headers=["项目", "当前", "要求"], tablefmt="pretty"))
 
         page.close()
 
@@ -242,11 +250,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not USERNAME or not PASSWORD:
-        print("请设置 USERNAME 和 PASSWORD 环境变量")
+        print_log("请设置 USERNAME 和 PASSWORD 环境变量")
         exit(1)
 
     try:
+        print_log("开始运行 LinuxDoBrowser...")
         l = LinuxDoBrowser(headless=not args.visible, wait_time=args.wait_time)
         l.run()
     except Exception as e:
-        print(f"程序运行失败: {e}")
+        print_log(f"程序运行失败: {e}")
