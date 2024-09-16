@@ -4,28 +4,18 @@ import random
 import argparse
 from tabulate import tabulate
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from dotenv import load_dotenv
-
-
-# 加载 .env 文件中的环境变量
-load_dotenv()
-
 
 USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
-HOME_URL = os.environ.get("HOME_URL", "https://linux.do/")
-HEADLESS = os.environ.get("HEADLESS", "True").lower() == "true"
-WAIT_TIME = float(os.environ.get("WAIT_TIME", 2))
-SCROLL_COUNT = int(os.environ.get("SCROLL_COUNT", 10))
-SCROLL_STEP_MIN = int(os.environ.get("SCROLL_STEP_MIN", 1000))
-SCROLL_STEP_MAX = int(os.environ.get("SCROLL_STEP_MAX", 1300))
-LIKE_PROBABILITY = float(os.environ.get("LIKE_PROBABILITY", 0.01))
-CONNECT_INFO_URL = os.environ.get("CONNECT_INFO_URL", "https://connect.linux.do/")
+
+
+HOME_URL = "https://linux.do/"
 
 
 class LinuxDoBrowser:
-    def __init__(self, headless=HEADLESS, wait_time=WAIT_TIME) -> None:
+    def __init__(self, headless=True, wait_time=2) -> None:
         try:
+            print("正在初始化浏览器...")
             self.pw = sync_playwright().start()
             self.browser = self.pw.chromium.launch(headless=headless)
             self.context = self.browser.new_context()
@@ -33,6 +23,7 @@ class LinuxDoBrowser:
             self.wait_time = wait_time
             print("正在打开主页...")
             self.page.goto(HOME_URL)
+            print(f"浏览器初始化完成，headless模式：{'是' if headless else '否'}")
         except Exception as e:
             print(f"初始化失败: {e}")
             raise
@@ -61,16 +52,18 @@ class LinuxDoBrowser:
     def click_topic(self):
         print("正在浏览主题...")
         try:
-            # 向下滚动、
-            for i in range(SCROLL_COUNT):
-                print(f"正在滚动第 {i + 1}/{SCROLL_COUNT} 次")
+            print("开始向下滚动主页...")
+            for _ in range(10):
                 self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 time.sleep(random.uniform(1, 5))  # 在底部稍作停留
 
             topics = self.page.query_selector_all("#list-area .title")
 
+            print(f"找到 {len(topics)} 个主题")
+
             # 用于记录已访问的主题
-            visited_topics = set()
+            visited_topics = self.load_visited_topics()
+            print(f"加载已访问主题数：{len(visited_topics)}")
 
             for i, topic in enumerate(topics, 1):
                 try:
@@ -81,7 +74,7 @@ class LinuxDoBrowser:
                         print(f"跳过已访问的主题 {i}/{len(topics)}")
                         continue
 
-                    print(f"正在浏览第 {i}/{len(topics)} 个主题")
+                    print(f"正在打开主题：{topic_url}")
                     page = self.context.new_page()
                     page.goto(topic_url)
 
@@ -101,9 +94,7 @@ class LinuxDoBrowser:
                     # 模拟用户慢慢下拉
                     total_height = page.evaluate("document.body.scrollHeight")
                     current_position = 0
-                    scroll_step = random.randint(
-                        SCROLL_STEP_MIN, SCROLL_STEP_MAX
-                    )  # 每次滚动的像素数
+                    scroll_step = random.randint(1000, 1300)  # 每次滚动的像素数
 
                     while current_position < total_height:
                         try:
@@ -128,7 +119,7 @@ class LinuxDoBrowser:
                                     # 如果这个元素还没有被处理过
                                     if element_id not in processed_elements:
                                         like_count = int(counter.inner_text())
-                                        if random.random() < LIKE_PROBABILITY:
+                                        if random.random() < 0.01:
                                             # TODO 检查元素是否在视口内
                                             # 找到对应的点赞按钮并点击
                                             like_button = counter.query_selector(
@@ -162,11 +153,13 @@ class LinuxDoBrowser:
                 finally:
                     try:
                         page.close()
+                        print(f"关闭主题页面")
                     except:
                         pass
 
-            # 保存已访问的主题，以便下次运行时使用
+            print(f"所有主题浏览完成，共访问 {len(visited_topics)} 个主题")
             self.save_visited_topics(visited_topics)
+            print("已保存访问记录")
 
         except Exception as e:
             print(f"浏览主题过程中发生错误: {e}")
@@ -186,19 +179,23 @@ class LinuxDoBrowser:
 
     def run(self):
         try:
+            print("开始运行自动化任务...")
             if not self.login():
+                print("登录失败，退出程序")
                 return
             self.click_topic()
             self.print_connect_info()
-            print("任务完成")
+            print("自动化任务完成")
         except Exception as e:
             print(f"运行过程中发生错误: {e}")
         finally:
             try:
+                print("正在关闭浏览器...")
                 self.browser.close()
                 self.pw.stop()
+                print("浏览器已关闭")
             except:
-                pass
+                print("关闭浏览器时发生错误")
 
     def click_like(self, page):
         page.locator(".discourse-reactions-reaction-button").first.click()
@@ -207,7 +204,7 @@ class LinuxDoBrowser:
     def print_connect_info(self):
         print("正在获取连接信息...")
         page = self.context.new_page()
-        page.goto(CONNECT_INFO_URL)
+        page.goto("https://connect.linux.do/")
         rows = page.query_selector_all("table tr")
 
         info = []
@@ -240,12 +237,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LinuxDo Browser Automation")
     parser.add_argument("--visible", action="store_true", help="Run in visible mode")
     parser.add_argument(
-        "--wait-time", type=float, default=WAIT_TIME, help="Wait time between actions"
+        "--wait-time", type=float, default=2, help="Wait time between actions"
     )
     args = parser.parse_args()
 
     if not USERNAME or not PASSWORD:
-        print("请在 .env 文件中设置 LINUXDO_USERNAME 和 LINUXDO_PASSWORD")
+        print("请设置 USERNAME 和 PASSWORD 环境变量")
         exit(1)
 
     try:
