@@ -10,7 +10,8 @@ USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
 
 
-HOME_URL = "https://linux.do/"
+HOME_URL = "https://linux.do/new"
+NEW_URL = "https://linux.do/new/"
 
 
 def print_log(*args, **kwargs):
@@ -56,6 +57,7 @@ class LinuxDoBrowser:
             return False
 
     def click_topic(self):
+        self.page.goto(NEW_URL)
         print_log("正在浏览主题...")
         try:
             print_log("开始向下滚动主页...")
