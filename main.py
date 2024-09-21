@@ -59,7 +59,7 @@ class LinuxDoBrowser:
         print_log("正在浏览主题...")
         try:
             print_log("开始向下滚动主页...")
-            for _ in range(10):
+            for _ in range(5):
                 self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 time.sleep(random.uniform(1, 5))  # 在底部稍作停留
 
