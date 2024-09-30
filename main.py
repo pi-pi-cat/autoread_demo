@@ -12,6 +12,7 @@ PASSWORD = os.environ.get("PASSWORD")
 
 HOME_URL = "https://linux.do/new"
 NEW_URL = "https://linux.do/new/"
+LOGIN_URL = "https://linux.do/login"
 
 
 def print_log(*args, **kwargs):
@@ -38,7 +39,8 @@ class LinuxDoBrowser:
     def login(self):
         try:
             print_log("正在登录...")
-            self.page.click(".login-button .d-button-label")
+            # self.page.click(".login-button .d-button-label")
+            self.page.goto(LOGIN_URL)
             self.page.fill("#login-account-name", USERNAME)
             self.page.fill("#login-account-password", PASSWORD)
             self.page.click("#login-button")
