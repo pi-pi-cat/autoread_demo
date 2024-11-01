@@ -10,7 +10,7 @@ USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
 
 
-HOME_URL = "https://linux.do/new"
+HOME_URL = "https://linux.do"
 NEW_URL = "https://linux.do/new/"
 LOGIN_URL = "https://linux.do/login"
 
@@ -108,23 +108,17 @@ class LinuxDoBrowser:
 
                     while current_position < total_height:
                         try:
-                            scroll_amount = min(
-                                scroll_step, total_height - current_position
-                            )
+                            scroll_amount = min(scroll_step, total_height - current_position)
                             self.smooth_scroll(page, scroll_amount)
                             current_position += scroll_amount
 
                             # 获取当前页面内的所有点赞计数器
-                            like_counters = page.query_selector_all(
-                                "div.discourse-reactions-double-button"
-                            )
+                            like_counters = page.query_selector_all("div.discourse-reactions-double-button")
 
                             for counter in like_counters:
                                 try:
                                     # 获取元素的唯一标识符
-                                    element_id = counter.query_selector(
-                                        ".only-like.discourse-reactions-counter"
-                                    ).get_attribute("id")
+                                    element_id = counter.query_selector(".only-like.discourse-reactions-counter").get_attribute("id")
 
                                     # 如果这个元素还没有被处理过
                                     if element_id not in processed_elements:
@@ -132,14 +126,10 @@ class LinuxDoBrowser:
                                         if random.random() < 0.01:
                                             # TODO 检查元素是否在视口内
                                             # 找到对应的点赞按钮并点击
-                                            like_button = counter.query_selector(
-                                                ".discourse-reactions-reaction-button"
-                                            )
+                                            like_button = counter.query_selector(".discourse-reactions-reaction-button")
                                             if like_button:
                                                 like_button.click()
-                                                print_log(
-                                                    f"点赞成功，点赞数：{like_count}"
-                                                )
+                                                print_log(f"点赞成功，点赞数：{like_count}")
                                                 time.sleep(random.uniform(2.5, 5.5))
 
                                     # 将元素添加到已处理集合中
@@ -165,9 +155,9 @@ class LinuxDoBrowser:
                 finally:
                     try:
                         page.close()
-                        print_log(f"关闭主题页面")
-                    except:
-                        pass
+                        print_log("关闭主题页面")
+                    except Exception as e:
+                        print_log(f"关闭主题页面时发生错误: {e}")
 
             print_log(f"所有主题浏览完成，共访问 {len(visited_topics)} 个主题")
             self.save_visited_topics(visited_topics)
@@ -206,8 +196,8 @@ class LinuxDoBrowser:
                 self.browser.close()
                 self.pw.stop()
                 print_log("浏览器已关闭")
-            except:
-                print_log("关闭浏览器时发生错误")
+            except Exception as e:
+                print_log(f"关闭浏览器时发生错误: {e}")
 
     def click_like(self, page):
         page.locator(".discourse-reactions-reaction-button").first.click()
@@ -248,9 +238,7 @@ class LinuxDoBrowser:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LinuxDo Browser Automation")
     parser.add_argument("--visible", action="store_true", help="Run in visible mode")
-    parser.add_argument(
-        "--wait-time", type=float, default=2, help="Wait time between actions"
-    )
+    parser.add_argument("--wait-time", type=float, default=2, help="Wait time between actions")
     args = parser.parse_args()
 
     if not USERNAME or not PASSWORD:
@@ -259,7 +247,7 @@ if __name__ == "__main__":
 
     try:
         print_log("开始运行 LinuxDoBrowser...")
-        l = LinuxDoBrowser(headless=not args.visible, wait_time=args.wait_time)
-        l.run()
+        browser = LinuxDoBrowser(headless=not args.visible, wait_time=args.wait_time)
+        browser.run()
     except Exception as e:
         print_log(f"程序运行失败: {e}")
