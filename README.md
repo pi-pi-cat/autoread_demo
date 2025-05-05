@@ -14,17 +14,21 @@
 
 - 使用DrissionPage替代Playwright以解决Cloudflare验证问题
 - DrissionPage可以更好地绕过Cloudflare检测，提高稳定性
+- 参数配置方式从环境变量改为直接在脚本中设置
 
-## 环境变量
+## 参数配置
 
-| 环境变量 | 说明 | 必填 |
-| --- | --- | --- |
-| LINUXDO_USERNAME | Linux.Do账号 | 是 |
-| LINUXDO_PASSWORD | Linux.Do密码 | 是 |
-| BROWSE_ENABLED | 是否启用浏览功能（默认true） | 否 |
-| GOTIFY_URL | Gotify服务器地址 | 否 |
-| GOTIFY_TOKEN | Gotify应用的API Token | 否 |
-| SC3_PUSH_KEY | Server酱³ SendKey | 否 |
+在main.py文件顶部直接修改以下参数：
+
+```python
+# 配置参数 - 直接在此处修改，无需使用环境变量
+USERNAME = None  # 填写你的用户名
+PASSWORD = None  # 填写你的密码
+BROWSE_ENABLED = True  # 是否启用浏览功能，False/0/off可禁用
+GOTIFY_URL = None  # Gotify 服务器地址
+GOTIFY_TOKEN = None  # Gotify 应用的 API Token
+SC3_PUSH_KEY = None  # Server酱³ SendKey
+```
 
 ## 使用方法
 
@@ -33,12 +37,8 @@
 pip install -r requirements.txt
 ```
 
-2. 设置环境变量，可以通过export命令或.env文件
-   - 复制env.example为env并修改为你的配置
-   ```
-   cp env.example env
-   nano env  # 编辑配置
-   ```
+2. 修改脚本参数配置：
+   - 打开main.py文件，直接修改顶部的配置参数
 
 3. 运行：
 ```

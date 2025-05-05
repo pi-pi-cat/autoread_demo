@@ -14,6 +14,14 @@ from loguru import logger
 from DrissionPage import ChromiumPage
 from tabulate import tabulate
 
+# 配置参数 - 直接在此处修改，无需使用环境变量
+USERNAME = "sz736659711@gmail.com"  # 填写你的用户名
+PASSWORD = "Wozhiai0@123"  # 填写你的密码
+BROWSE_ENABLED = True  # 是否启用浏览功能，False/0/off可禁用
+GOTIFY_URL = None  # Gotify 服务器地址
+GOTIFY_TOKEN = None  # Gotify 应用的 API Token
+SC3_PUSH_KEY = None  # Server酱³ SendKey
+
 
 def retry_decorator(retries=3):
     def decorator(func):
@@ -35,22 +43,6 @@ def retry_decorator(retries=3):
 
     return decorator
 
-
-# 环境变量配置
-USERNAME = os.environ.get("LINUXDO_USERNAME")
-PASSWORD = os.environ.get("LINUXDO_PASSWORD")
-BROWSE_ENABLED = os.environ.get("BROWSE_ENABLED", "true").strip().lower() not in [
-    "false",
-    "0",
-    "off",
-]
-if not USERNAME:
-    USERNAME = os.environ.get("BACKUP_USERNAME")
-if not PASSWORD:
-    PASSWORD = os.environ.get("BACKUP_PASSWORD")
-GOTIFY_URL = os.environ.get("GOTIFY_URL")  # Gotify 服务器地址
-GOTIFY_TOKEN = os.environ.get("GOTIFY_TOKEN")  # Gotify 应用的 API Token
-SC3_PUSH_KEY = os.environ.get("SC3_PUSH_KEY")  # Server酱³ SendKey
 
 # 网站URL
 HOME_URL = "https://linux.do/"
@@ -416,7 +408,7 @@ class LinuxDoChat:
             except Exception as e:
                 logger.error(f"Gotify推送失败: {str(e)}")
         else:
-            logger.info("未配置Gotify环境变量，跳过通知发送")
+            logger.info("未配置Gotify参数，跳过通知发送")
 
         # Server酱通知
         if SC3_PUSH_KEY:
@@ -475,7 +467,7 @@ class LinuxDoChat:
 if __name__ == "__main__":
     try:
         if not USERNAME or not PASSWORD:
-            logger.error("请设置USERNAME和PASSWORD环境变量")
+            logger.error("请在脚本顶部设置USERNAME和PASSWORD参数")
             sys.exit(1)
 
         logger.info(f"开始运行 Linux.Do 签到脚本 (DrissionPage版)")
