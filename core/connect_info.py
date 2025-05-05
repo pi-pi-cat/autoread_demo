@@ -30,6 +30,7 @@ class ConnectInfoManager:
         self.before_data = []  # 存储签到前的数据
         self.after_data = []  # 存储签到后的数据
         self.console = Console()  # Rich控制台实例
+        self.compare_html = ""  # 存储HTML格式的对比结果
 
     @log_entry_exit()
     @retry(retries=3, delay=2)
@@ -140,6 +141,94 @@ class ConnectInfoManager:
         for item in data:
             logger.info(f"连接信息: {', '.join(item)}")
 
+    def get_compare_info_html(self) -> str:
+        """
+        生成HTML格式的连接信息对比表格
+
+        Returns:
+            str: HTML格式的连接信息对比表格
+        """
+        if not self.before_data or not self.after_data:
+            return "<p>缺少签到前或签到后的数据，无法进行对比</p>"
+
+        # 构建HTML表格
+        html = []
+        html.append(
+            '<table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">'
+        )
+
+        # 表头
+        html.append('<tr style="background-color: #f2f2f2;">')
+        html.append('<th style="text-align: left;">项目</th>')
+        html.append('<th style="text-align: left;">签到前</th>')
+        html.append('<th style="text-align: left;">签到后</th>')
+        html.append('<th style="text-align: left;">要求</th>')
+        html.append("</tr>")
+
+        # 表格内容
+        max_rows = max(len(self.before_data), len(self.after_data))
+
+        for i in range(max_rows):
+            if i < len(self.before_data) and i < len(self.after_data):
+                before_row = self.before_data[i]
+                after_row = self.after_data[i]
+
+                # 检查项目名称是否相同
+                if before_row[0] == after_row[0]:
+                    # 获取数据并进行HTML转义
+                    item = self._escape_html(before_row[0])
+                    before_val = self._escape_html(
+                        before_row[1] if len(before_row) > 1 else ""
+                    )
+                    after_val = self._escape_html(
+                        after_row[1] if len(after_row) > 1 else ""
+                    )
+                    requirement = self._escape_html(
+                        before_row[2] if len(before_row) > 2 else ""
+                    )
+
+                    # 如果值有变化，使用高亮样式
+                    row_style = ""
+                    after_val_style = ""
+
+                    if before_row[1] != after_row[1]:
+                        row_style = ' style="background-color: #f9f9f9;"'
+                        after_val_style = ' style="color: green; font-weight: bold;"'
+
+                    html.append(f"<tr{row_style}>")
+                    html.append(f"<td>{item}</td>")
+                    html.append(f"<td>{before_val}</td>")
+                    html.append(f"<td{after_val_style}>{after_val}</td>")
+                    html.append(f"<td>{requirement}</td>")
+                    html.append("</tr>")
+
+        html.append("</table>")
+
+        # 保存HTML格式的对比结果
+        self.compare_html = "\n".join(html)
+        return self.compare_html
+
+    def _escape_html(self, text: str) -> str:
+        """
+        转义HTML特殊字符
+
+        Args:
+            text: 需要转义的文本
+
+        Returns:
+            str: 转义后的文本
+        """
+        if not isinstance(text, str):
+            text = str(text)
+
+        return (
+            text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+            .replace("'", "&#39;")
+        )
+
     def display_compare_info(self) -> None:
         """
         对比显示签到前后的连接信息
@@ -190,6 +279,9 @@ class ConnectInfoManager:
         self.console.print("\n")
         self.console.print(table)
         self.console.print("\n")
+
+        # 同时生成HTML格式的对比结果
+        self.get_compare_info_html()
 
         logger.info(f"已显示签到前后的连接信息对比，共 {max_rows} 行数据")
 

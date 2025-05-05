@@ -155,12 +155,25 @@ def run(config: Dict[str, Any]):
         logger.info("显示连接信息对比")
         connect_info_manager.display_compare_info()
 
+        # 获取HTML格式的对比表格
+        html_compare_table = connect_info_manager.get_compare_info_html()
+
         # 发送通知
         notification_message = NOTIFICATION_SUCCESS_PREFIX
         if browse_enabled:
             notification_message += " + 浏览任务完成"
 
+        # 发送普通文本通知
         notification_manager.send_all(notification_message)
+
+        # 设置环境变量，供GitHub Actions使用
+        if "GITHUB_ENV" in os.environ:
+            try:
+                with open(os.environ["GITHUB_ENV"], "a") as f:
+                    f.write(f"LINUXDO_COMPARE_TABLE<<EOF\n{html_compare_table}\nEOF\n")
+                logger.info("已将连接信息对比表格写入GitHub Actions环境变量")
+            except Exception as e:
+                logger.error(f"写入GitHub环境变量失败: {str(e)}")
 
         logger.success("所有任务完成")
     finally:

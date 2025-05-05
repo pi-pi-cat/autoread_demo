@@ -68,6 +68,18 @@ jobs:
           -d chat_id=${{ env.TELEGRAM_USERID }} \
           -d parse_mode=HTML \
           -d text="✅ <b>LINUX DO</b> 每日签到成功完成"
+      - name: Send Compare Table to Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
+        if: ${{ success() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' && env.LINUXDO_COMPARE_TABLE != '' }}
+        run: |
+          # 使用curl发送POST请求
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+          --form-string "chat_id=${TELEGRAM_USERID}" \
+          --form-string "parse_mode=HTML" \
+          --form-string "text=<b>Linux.Do 连接信息对比</b>
+${LINUXDO_COMPARE_TABLE}"
 
       - name: Send Failure Notification
         env:
