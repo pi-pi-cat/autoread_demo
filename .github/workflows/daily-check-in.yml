@@ -18,13 +18,21 @@ jobs:
         with:
           python-version: '3.9.19'
 
+      # 添加Chrome浏览器安装步骤
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable  # 使用稳定版Chrome
+          install-dependencies: true  # 自动安装所需系统依赖
+
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          playwright install --with-deps firefox
 
-      - name: Execute script
+      # 使用xvfb-action来提供有界面环境，解决CF验证问题
+      - name: Execute script with Xvfb
+        uses: GabrielBB/xvfb-action@v1
         env:
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
@@ -34,8 +42,10 @@ jobs:
           GOTIFY_TOKEN: ${{ secrets.GOTIFY_TOKEN }}
           SC3_PUSH_KEY: ${{ secrets.SC3_PUSH_KEY }}
           BROWSE_ENABLED: ${{ secrets.BROWSE_ENABLED }}
-        run: |
-          python main.py
+        with:
+          run: python main.py
+          # 添加Xvfb选项，使用1280x1024分辨率，24位色深
+          options: -screen 0 1280x1024x24
 
       - name: Send Telegram Notification
         env:

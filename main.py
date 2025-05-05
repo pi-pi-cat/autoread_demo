@@ -45,9 +45,9 @@ BROWSE_ENABLED = os.environ.get("BROWSE_ENABLED", "true").strip().lower() not in
     "off",
 ]
 if not USERNAME:
-    USERNAME = os.environ.get("USERNAME")
+    USERNAME = os.environ.get("BACKUP_USERNAME")
 if not PASSWORD:
-    PASSWORD = os.environ.get("PASSWORD")
+    PASSWORD = os.environ.get("BACKUP_PASSWORD")
 GOTIFY_URL = os.environ.get("GOTIFY_URL")  # Gotify 服务器地址
 GOTIFY_TOKEN = os.environ.get("GOTIFY_TOKEN")  # Gotify 应用的 API Token
 SC3_PUSH_KEY = os.environ.get("SC3_PUSH_KEY")  # Server酱³ SendKey
@@ -71,6 +71,7 @@ class LinuxDoChat:
         logger.info(f"已打开登录页面: {self.page.url}")
         return self.page.url == LOGIN_URL
 
+    @retry_decorator()
     def login(self):
         """登录功能，支持已登录状态检测"""
         logger.info("开始检查登录状态")
@@ -122,6 +123,7 @@ class LinuxDoChat:
             logger.error(f"登录过程中发生错误: {str(e)}")
             return False
 
+    @retry_decorator()
     def click_topic(self):
         """点击浏览主题列表"""
         # 切换到最新主题页面
@@ -303,6 +305,7 @@ class LinuxDoChat:
             logger.error(f"点赞失败: {str(e)}")
             logger.debug(f"页面源码片段: {page.html[:500]}...")
 
+    @retry_decorator()
     def print_connect_info(self):
         """获取并打印连接信息"""
         logger.info("获取连接信息")

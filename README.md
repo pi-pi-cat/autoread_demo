@@ -12,7 +12,7 @@
 
 ## 更新说明
 
-- 从Playwright迁移到DrissionPage以解决Cloudflare验证问题
+- 使用DrissionPage替代Playwright以解决Cloudflare验证问题
 - DrissionPage可以更好地绕过Cloudflare检测，提高稳定性
 
 ## 环境变量
@@ -34,23 +34,27 @@ pip install -r requirements.txt
 ```
 
 2. 设置环境变量，可以通过export命令或.env文件
+   - 复制env.example为env并修改为你的配置
+   ```
+   cp env.example env
+   nano env  # 编辑配置
+   ```
 
 3. 运行：
 ```
-python main.py  # 使用旧版Playwright实现
-python new.py   # 使用新版DrissionPage实现（推荐，能绕过Cloudflare）
+python main.py
 ```
 
 ## 定时任务
 
 可配合cron使用：
 ```
-0 */6 * * * cd /path/to/linuxdo-autoread && python new.py
+0 */6 * * * cd /path/to/linuxdo-autoread && python main.py
 ```
 
 ## 特殊说明
 
-由于使用DrissionPage替代Playwright，本工具能更好地处理Cloudflare验证挑战。
+由于使用DrissionPage，本工具能更好地处理Cloudflare验证挑战。
 如果您遇到登录问题，可以尝试设置更长的等待时间或重试次数。
 
 ## License
