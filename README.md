@@ -67,16 +67,30 @@ linuxdo-autoread/
 
 ### 2. 使用环境变量
 
-程序支持通过环境变量进行配置：
+本项目支持从环境变量获取配置，特别适合在GitHub Actions中使用。
 
-```bash
-export LINUXDO_USERNAME="your_email@example.com"
-export LINUXDO_PASSWORD="your_password"
-export BROWSE_ENABLED="true"
-export GOTIFY_URL="https://your-gotify-server"
-export GOTIFY_TOKEN="your-token"
-export SC3_PUSH_KEY="your-server-chan-key"
-```
+### 支持的环境变量
+
+- `USERNAME` 或 `LINUXDO_USERNAME`: Linux.Do 用户名
+- `PASSWORD` 或 `LINUXDO_PASSWORD`: Linux.Do 密码
+- `BROWSE_ENABLED`: 是否启用浏览功能（true/false）
+- `GOTIFY_URL`: Gotify 服务器地址
+- `GOTIFY_TOKEN`: Gotify 应用的 API Token
+- `SC3_PUSH_KEY`: Server酱³ SendKey
+
+### 在GitHub Actions中使用Secrets
+
+推荐将敏感信息（如用户名和密码）存储在GitHub仓库的Secrets中，而不是直接写在配置文件中。
+
+1. 在GitHub仓库页面，点击 Settings -> Secrets and variables -> Actions
+2. 点击 "New repository secret" 按钮
+3. 添加以下Secrets:
+   - `USERNAME`: 你的Linux.Do用户名
+   - `PASSWORD`: 你的Linux.Do密码
+   - `TELEGRAM_TOKEN`: Telegram机器人token（可选）
+   - `TELEGRAM_USERID`: Telegram用户ID（可选）
+   
+这样配置后，无需在config.json中填写账号密码，程序会自动从环境变量获取。
 
 ### 3. 命令行参数
 

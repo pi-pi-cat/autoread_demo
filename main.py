@@ -100,6 +100,9 @@ def run(config: Dict[str, Any]):
         config: 配置字典
     """
     try:
+        # 跟踪凭据来源
+        credentials_from_env = False
+
         # 获取关键配置项
         username = config.get("username")
         password = config.get("password")
@@ -112,14 +115,36 @@ def run(config: Dict[str, Any]):
         if args.no_browse:
             browse_enabled = False
 
-        # 检查必要的配置
+        # 检查是否有足够的凭据信息
         if not username or not password:
-            logger.error("配置中未提供用户名或密码")
-            sys.exit(1)
+            # 尝试从环境变量直接获取（避免配置文件已加载但环境变量后续修改的情况）
+            username = (
+                username
+                or os.environ.get("USERNAME")
+                or os.environ.get("LINUXDO_USERNAME")
+            )
+            password = (
+                password
+                or os.environ.get("PASSWORD")
+                or os.environ.get("LINUXDO_PASSWORD")
+            )
+
+            # 如果环境变量中也没有凭据，则退出
+            if not username or not password:
+                logger.error("在配置文件和环境变量中均未找到有效的用户名或密码")
+                sys.exit(1)
+            else:
+                logger.info("已从环境变量获取登录凭据")
+                # 标记凭据来源
+                credentials_from_env = True
+                # 更新配置字典，确保后续函数可以正确获取凭据
+                config["username"] = username
+                config["password"] = password
 
         # 显示启动信息
         logger.info("开始运行 Linux.Do 签到脚本 (DrissionPage版)")
-        logger.info(f"账户: {username}")
+        credential_source = "环境变量" if credentials_from_env else "配置文件"
+        logger.info(f"账户: {username} (来源: {credential_source})")
         logger.info(f"浏览功能: {'启用' if browse_enabled else '禁用'}")
         if browse_enabled:
             logger.info(f"浏览主题数: {max_topics}")
