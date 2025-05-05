@@ -143,30 +143,21 @@ class ConnectInfoManager:
 
     def get_compare_info_html(self) -> str:
         """
-        生成HTML格式的连接信息对比表格
+        生成Telegram兼容的HTML格式的连接信息对比
 
         Returns:
-            str: HTML格式的连接信息对比表格
+            str: Telegram兼容的HTML格式连接信息对比
         """
         if not self.before_data or not self.after_data:
-            return "<p>缺少签到前或签到后的数据，无法进行对比</p>"
+            return "<b>⚠️ 缺少签到前或签到后的数据，无法进行对比</b>"
 
-        # 构建HTML表格
-        html = []
-        html.append(
-            '<table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">'
-        )
-
-        # 表头
-        html.append('<tr style="background-color: #f2f2f2;">')
-        html.append('<th style="text-align: left;">项目</th>')
-        html.append('<th style="text-align: left;">签到前</th>')
-        html.append('<th style="text-align: left;">签到后</th>')
-        html.append('<th style="text-align: left;">要求</th>')
-        html.append("</tr>")
+        # 构建Telegram兼容的HTML输出
+        html_parts = []
+        html_parts.append("<b>📊 连接信息对比</b>\n")
 
         # 表格内容
         max_rows = max(len(self.before_data), len(self.after_data))
+        change_count = 0
 
         for i in range(max_rows):
             if i < len(self.before_data) and i < len(self.after_data):
@@ -187,25 +178,30 @@ class ConnectInfoManager:
                         before_row[2] if len(before_row) > 2 else ""
                     )
 
-                    # 如果值有变化，使用高亮样式
-                    row_style = ""
-                    after_val_style = ""
+                    # 判断值是否有变化
+                    has_changed = before_row[1] != after_row[1]
 
-                    if before_row[1] != after_row[1]:
-                        row_style = ' style="background-color: #f9f9f9;"'
-                        after_val_style = ' style="color: green; font-weight: bold;"'
+                    if has_changed:
+                        change_count += 1
+                        # 添加变化项的卡片
+                        html_parts.append(f"\n<b>━━━ {item} ━━━</b>")
+                        html_parts.append(f"📥 签到前：<i>{before_val}</i>")
+                        html_parts.append(f"📤 签到后：<b>{after_val}</b> ✅")
+                        if requirement:
+                            html_parts.append(f"📋 要求：{requirement}")
+                        html_parts.append("")  # 添加额外空行作为分隔
+                    else:
+                        # 如果未发生变化，使用更简洁的格式
+                        html_parts.append(f"\n<b>{item}</b>：{after_val} (未变化)")
 
-                    html.append(f"<tr{row_style}>")
-                    html.append(f"<td>{item}</td>")
-                    html.append(f"<td>{before_val}</td>")
-                    html.append(f"<td{after_val_style}>{after_val}</td>")
-                    html.append(f"<td>{requirement}</td>")
-                    html.append("</tr>")
-
-        html.append("</table>")
+        # 添加总结信息
+        if change_count > 0:
+            html_parts.append(f"\n<b>🔄 共有 {change_count} 项数据发生变化</b>")
+        else:
+            html_parts.append("\n<b>ℹ️ 所有数据均未发生变化</b>")
 
         # 保存HTML格式的对比结果
-        self.compare_html = "\n".join(html)
+        self.compare_html = "\n".join(html_parts)
         return self.compare_html
 
     def _escape_html(self, text: str) -> str:
