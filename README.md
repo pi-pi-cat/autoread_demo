@@ -1,42 +1,60 @@
- [English](./README_en.md)
- 
-# LinuxDo 每日签到（每日打卡）
+# LinuxDo Autoread
 
-## 项目描述
-这个项目用于自动登录 [LinuxDo](https://linux.do/) 网站并随机读取几个帖子。它使用 Python 和 Playwright 自动化库模拟浏览器登录并浏览帖子。
+一个用于自动化完成Linux.Do签到和浏览任务的工具。
 
 ## 功能
-- 自动登录 LinuxDo。
-- 自动浏览帖子。
-- 每天在 GitHub Actions 中自动运行。
 
-## 如何使用
-本节只介绍在github actions中如何使用。在进行之前需要先fork本项目。
+- 自动登录Linux.Do
+- 自动浏览帖子（可配置关闭）
+- 随机点赞部分帖子
+- 获取连接信息
+- 支持通知推送（Gotify、Server酱³）
 
-### 设置环境变量
-在使用此自动化脚本之前，需要在 GitHub 仓库中配置两个环境变量 `USERNAME` 和 `PASSWORD`，这两个变量将用于登录 LinuxDo。按照以下步骤设置：
+## 更新说明
 
-1. 登录 GitHub，进入你的项目仓库。
-2. 点击仓库的 `Settings` 选项卡。
-3. 在左侧菜单中找到 `Secrets` 部分，点击 `Actions`。
-4. 点击 `New repository secret` 按钮。
-5. 分别添加 `USERNAME` 和 `PASSWORD`：
-   - 在 `Name` 字段中输入 `USERNAME`，在 `Value` 字段中输入你的 LinuxDo 用户名或者邮箱。
-   - 重复上述步骤，这次输入 `PASSWORD` 作为 `Name`，相应的密码作为 `Value`。
+- 从Playwright迁移到DrissionPage以解决Cloudflare验证问题
+- DrissionPage可以更好地绕过Cloudflare检测，提高稳定性
 
-### GitHub Actions 自动运行
-此项目的 GitHub Actions 配置会自动每天零点 UTC 时间运行签到脚本。你无需进行任何操作即可启动此自动化任务。GitHub Actions 的工作流文件位于 `.github/workflows` 目录下，文件名为 `daily-check-in.yml`。
+## 环境变量
 
-如果你需要手动触发此工作流，可以通过以下步骤操作：
+| 环境变量 | 说明 | 必填 |
+| --- | --- | --- |
+| LINUXDO_USERNAME | Linux.Do账号 | 是 |
+| LINUXDO_PASSWORD | Linux.Do密码 | 是 |
+| BROWSE_ENABLED | 是否启用浏览功能（默认true） | 否 |
+| GOTIFY_URL | Gotify服务器地址 | 否 |
+| GOTIFY_TOKEN | Gotify应用的API Token | 否 |
+| SC3_PUSH_KEY | Server酱³ SendKey | 否 |
 
-1. 进入 GitHub 仓库的 `Actions` 选项卡。
-2. 选择你想运行的工作流。
-3. 点击 `Run workflow` 按钮，选择分支，然后点击 `Run workflow` 以启动工作流。
+## 使用方法
 
-## 运行结果
+1. 安装依赖：
+```
+pip install -r requirements.txt
+```
 
-`Actions`栏 -> 点击最新的`Daily Check-in` workflow run -> `run_script` -> `Execute script`
+2. 设置环境变量，可以通过export命令或.env文件
 
-可看到`Connect Info`：
-（新号可能这里为空，多挂几天就有了）
-![image](https://github.com/user-attachments/assets/853549a5-b11d-4d5a-9284-7ad2f8ea698b)
+3. 运行：
+```
+python main.py  # 使用旧版Playwright实现
+python new.py   # 使用新版DrissionPage实现（推荐，能绕过Cloudflare）
+```
+
+## 定时任务
+
+可配合cron使用：
+```
+0 */6 * * * cd /path/to/linuxdo-autoread && python new.py
+```
+
+## 特殊说明
+
+由于使用DrissionPage替代Playwright，本工具能更好地处理Cloudflare验证挑战。
+如果您遇到登录问题，可以尝试设置更长的等待时间或重试次数。
+
+## License
+
+MIT
+
+
