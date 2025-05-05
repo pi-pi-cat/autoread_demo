@@ -78,8 +78,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
           --form-string "chat_id=${TELEGRAM_USERID}" \
           --form-string "parse_mode=HTML" \
-          --form-string "text=<b>Linux.Do 连接信息对比</b>
-${LINUXDO_COMPARE_TABLE}"
+          --form-string "text=<b>Linux.Do 连接信息对比</b>${LINUXDO_COMPARE_TABLE}"
 
       - name: Send Failure Notification
         env:
