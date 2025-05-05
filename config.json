@@ -2,7 +2,7 @@
   "username": "sz736659711@gmail.com",
   "password": "Wozhiai0@123",
   "browse_enabled": true,
-  "max_topics": 1,
+  "max_topics": 30,
   "notifications": {
     "gotify": {
       "url": null,
