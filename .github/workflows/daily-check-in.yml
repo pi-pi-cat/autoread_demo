@@ -1,92 +1,92 @@
-name: Daily Check-in
+# name: Daily Check-in
 
-on:
-  schedule:
-    #- cron: '0 1 * * *'  # 每天1点 UTC 时间执行
-    #- cron: '0 */12 * * *'  # 每12小时执行一次
+# on:
+#   schedule:
+#     #- cron: '0 1 * * *'  # 每天1点 UTC 时间执行
+#     #- cron: '0 */12 * * *'  # 每12小时执行一次
 
-  workflow_dispatch:
+#   workflow_dispatch:
 
-jobs:
-  run_script:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
+# jobs:
+#   run_script:
+#     runs-on: ubuntu-22.04
+#     steps:
+#       - uses: actions/checkout@v4
       
-      - name: Send Start Telegram Notification
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
-        if: ${{ env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
-          -d chat_id=${{ env.TELEGRAM_USERID }} \
-          -d parse_mode=HTML \
-          -d text="✅ <b>LINUX DO</b> 开始签到"
+#       - name: Send Start Telegram Notification
+#         env:
+#           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+#           TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
+#         if: ${{ env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
+#         run: |
+#           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
+#           -d chat_id=${{ env.TELEGRAM_USERID }} \
+#           -d parse_mode=HTML \
+#           -d text="✅ <b>LINUX DO</b> 开始签到"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9.19'
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.9.19'
 
-      # 添加Chrome浏览器安装步骤
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable  # 使用稳定版Chrome
-          install-dependencies: true  # 自动安装所需系统依赖
+#       # 添加Chrome浏览器安装步骤
+#       - name: Install Chrome
+#         uses: browser-actions/setup-chrome@v1
+#         with:
+#           chrome-version: stable  # 使用稳定版Chrome
+#           install-dependencies: true  # 自动安装所需系统依赖
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+#       - name: Install python dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt
 
-      # 使用xvfb-action来提供有界面环境，解决CF验证问题
-      - name: Execute script with Xvfb
-        uses: GabrielBB/xvfb-action@v1
-        env:
-          USERNAME: ${{ secrets.USERNAME }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          LINUXDO_USERNAME: ${{ secrets.LINUXDO_USERNAME }}
-          LINUXDO_PASSWORD: ${{ secrets.LINUXDO_PASSWORD }}
-          GOTIFY_URL: ${{ secrets.GOTIFY_URL }}
-          GOTIFY_TOKEN: ${{ secrets.GOTIFY_TOKEN }}
-          SC3_PUSH_KEY: ${{ secrets.SC3_PUSH_KEY }}
-          BROWSE_ENABLED: ${{ secrets.BROWSE_ENABLED }}
-        with:
-          run: python main.py
-          # 添加Xvfb选项，使用1280x1024分辨率，24位色深
-          options: -screen 0 1280x1024x24
+#       # 使用xvfb-action来提供有界面环境，解决CF验证问题
+#       - name: Execute script with Xvfb
+#         uses: GabrielBB/xvfb-action@v1
+#         env:
+#           USERNAME: ${{ secrets.USERNAME }}
+#           PASSWORD: ${{ secrets.PASSWORD }}
+#           LINUXDO_USERNAME: ${{ secrets.LINUXDO_USERNAME }}
+#           LINUXDO_PASSWORD: ${{ secrets.LINUXDO_PASSWORD }}
+#           GOTIFY_URL: ${{ secrets.GOTIFY_URL }}
+#           GOTIFY_TOKEN: ${{ secrets.GOTIFY_TOKEN }}
+#           SC3_PUSH_KEY: ${{ secrets.SC3_PUSH_KEY }}
+#           BROWSE_ENABLED: ${{ secrets.BROWSE_ENABLED }}
+#         with:
+#           run: python main.py
+#           # 添加Xvfb选项，使用1280x1024分辨率，24位色深
+#           options: -screen 0 1280x1024x24
 
-      - name: Send Telegram Notification
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
-        if: ${{ success() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
-          -d chat_id=${{ env.TELEGRAM_USERID }} \
-          -d parse_mode=HTML \
-          -d text="✅ <b>LINUX DO</b> 每日签到成功完成"
-      - name: Send Compare Table to Telegram
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
-        if: ${{ success() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' && env.LINUXDO_COMPARE_TABLE != '' }}
-        run: |
-          # 使用curl发送POST请求
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
-          --form-string "chat_id=${TELEGRAM_USERID}" \
-          --form-string "parse_mode=HTML" \
-          --form-string "text=${LINUXDO_COMPARE_TABLE}"
+#       - name: Send Telegram Notification
+#         env:
+#           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+#           TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
+#         if: ${{ success() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
+#         run: |
+#           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
+#           -d chat_id=${{ env.TELEGRAM_USERID }} \
+#           -d parse_mode=HTML \
+#           -d text="✅ <b>LINUX DO</b> 每日签到成功完成"
+#       - name: Send Compare Table to Telegram
+#         env:
+#           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+#           TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
+#         if: ${{ success() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' && env.LINUXDO_COMPARE_TABLE != '' }}
+#         run: |
+#           # 使用curl发送POST请求
+#           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+#           --form-string "chat_id=${TELEGRAM_USERID}" \
+#           --form-string "parse_mode=HTML" \
+#           --form-string "text=${LINUXDO_COMPARE_TABLE}"
 
-      - name: Send Failure Notification
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
-        if: ${{ failure() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
-          -d chat_id=${{ env.TELEGRAM_USERID }} \
-          -d parse_mode=HTML \
-          -d text="❌ <b>LINUX DO</b> 每日签到失败"
+#       - name: Send Failure Notification
+#         env:
+#           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+#           TELEGRAM_USERID: ${{ secrets.TELEGRAM_USERID }}
+#         if: ${{ failure() && env.TELEGRAM_TOKEN != '' && env.TELEGRAM_USERID != '' }}
+#         run: |
+#           curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" \
+#           -d chat_id=${{ env.TELEGRAM_USERID }} \
+#           -d parse_mode=HTML \
+#           -d text="❌ <b>LINUX DO</b> 每日签到失败"
